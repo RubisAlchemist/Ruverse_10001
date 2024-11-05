@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 //import { Box, Button, Container, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Footer, Header } from "@components/index";
 import homeImage from "@assets/images/homeImage.png";
 import styled, { keyframes } from "styled-components";
 //import { Container } from '@mui/material';
+
+import transitionVideo from "@assets/videos/home_SF2.mp4"
 
 const floatAnimation = keyframes`
   0% {
@@ -57,8 +59,20 @@ const ResponsiveImage = styled.img`
 const HomePage = () => {
   const navigate = useNavigate();
 
+  const [isTransitioning, setIsTransitioning] = useState(false); // 전환 상태 관리
+  const videoRef = useRef(null); // 비디오 참조
+
+  const onClickNavigate = () => {
+         setIsTransitioning(true); // 버튼 클릭 시 전환 상태 활성화
+  };
+
+  const handleVideoEnded = () => {
+        navigate("/ai-consultEntry"); // 영상 재생 완료 시 네비게이션
+  };
+
+
   // const onClickNavigate = () => navigate("/AvatarChoosePage");
-  const onClickNavigate = () => navigate("/ai-consultEntry");
+  //const onClickNavigate = () => navigate("/ai-consultEntry");
   const onClickLogo = () => navigate("/");
 
   return (
@@ -76,6 +90,20 @@ const HomePage = () => {
         </ActionButton>
       </Content>
       <Footer />
+
+      {/**메타버스 */}
+       {isTransitioning && (
+         <VideoOverlay>
+           <TransitionVideo
+             ref={videoRef}
+             src={transitionVideo}
+             autoPlay
+             onEnded={handleVideoEnded}
+             controls={false}
+           />
+         </VideoOverlay>
+       )}
+       {/**메타버스 */}
     </Container>
   
   );
@@ -197,6 +225,28 @@ const ActionButton = styled.button`
     font-size: 10px;
   }
 `;
+
+ // 메타버스
+ // 전환 영상 오버레이 스타일링
+ const VideoOverlay = styled.div`
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background-color: black; /* 배경색을 검정으로 설정하여 영상이 더욱 돋보이게 함 */
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 9999; /* 다른 모든 요소보다 위에 표시 */
+ `;
+
+ // 전환 영상 스타일링
+ const TransitionVideo = styled.video`
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+ `;
 
 export default HomePage;
 
