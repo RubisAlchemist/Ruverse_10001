@@ -2,7 +2,6 @@ import VideoCallImage from "@assets/images/videocallImage.png";
 import {
   Box,
   Button,
-  //Container,
   Stack,
   TextField,
   Typography,
@@ -23,9 +22,16 @@ import avatarDohyung from "@assets/images/avatar_dohyung.png";
 import { useDispatch, useSelector } from "react-redux";
 import { uploadNewSessionRequest } from "@store/ai/aiConsultSlice";
 import styled from "styled-components";
-// import avatarJungkook from "@assets/images/avatar_jungkook.png";
+
+import hallwayChloeVideo from "@assets/videos/hallway_chloe.mp4";
+import hallwayDohyungVideo from "@assets/videos/hallway_dohyung.mp4";
+import hallwaySonnyVideo from "@assets/videos/hallway_sonny.mp4";
+import hallwayKarinaVideo from "@assets/videos/hallway_karina.mp4";
+
 const AiConsultEntryPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [uname, setUname] = useState({
     value: "",
@@ -36,10 +42,15 @@ const AiConsultEntryPage = () => {
     error: false,
   });
   const [isButtonEnabled, setIsButtonEnabled] = useState(false);
+
+  // 비디오 재생 상태 및 선택된 비디오
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [hallwayVideo, setHallwayVideo] = useState(null);
+
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar((prev) => (prev === avatar ? null : avatar));
   };
-  const navigate = useNavigate();
+
   const onChangeUname = (e) => {
     const value = e.target.value;
     const regex = /^[A-Za-z0-9ㄱ-ㅎㅏ-ㅣ가-힣]+$/;
@@ -49,6 +60,7 @@ const AiConsultEntryPage = () => {
       error: !valid && value !== "",
     });
   };
+
   const onChangePhoneNumber = (e) => {
     const value = e.target.value;
     const isValid = /^[0-9]{11}$/.test(value);
@@ -57,6 +69,7 @@ const AiConsultEntryPage = () => {
       error: value !== "" && !isValid,
     });
   };
+
   const onClickStart = async () => {
     let unameToUse = uname.value;
     const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(uname.value);
@@ -76,28 +89,45 @@ const AiConsultEntryPage = () => {
     formData.append("phoneNumber", phoneNumber.value);
     formData.append("selectedAvatar", selectedAvatar);
     await dispatch(uploadNewSessionRequest(formData));
+
+    let hallwayVideoSrc;
+    if (selectedAvatar === "sonny") {
+      hallwayVideoSrc = hallwaySonnyVideo;
+    } else if (selectedAvatar === "karina") {
+      hallwayVideoSrc = hallwayKarinaVideo;
+    } else if (selectedAvatar === "chloe") {
+      hallwayVideoSrc = hallwayChloeVideo;
+    } else if (selectedAvatar === "dohyung") {
+      hallwayVideoSrc = hallwayDohyungVideo;
+    }
+
+    setHallwayVideo(hallwayVideoSrc);
+    setIsVideoPlaying(true);
+  };
+
+  const onVideoEnded = () => {
+    let unameToUse = uname.value;
+    const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(uname.value);
+    if (containsKorean) {
+      unameToUse = convert(uname.value).replace(/\s+/g, "");
+    }
     navigate(
       `/ai-consult/${unameToUse}?phoneNumber=${phoneNumber.value}&selectedAvatar=${selectedAvatar}`
     );
   };
+
   useEffect(() => {
     const isNameValid = uname.value !== "" && !uname.error;
     const isPhoneValid = phoneNumber.value !== "" && !phoneNumber.error;
     const isAvatarSelected = selectedAvatar !== null;
     setIsButtonEnabled(isNameValid && isPhoneValid && isAvatarSelected);
   }, [uname, phoneNumber, selectedAvatar]);
+
   return (
     <Container>
       <Header />
       {/* <Toolbar/> */}
-      <Box
-        flex="1"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        //height="100vh"
-        //sx={{ paddingTop: { xs: '40px', md: '80px' }, backgroundColor: "#b0e977t1" }}
-      >
+      <Box flex="1" display="flex" alignItems="center" justifyContent="center">
         <Stack spacing={{ xs: 3, md: 4 }} alignItems="center" width="100%">
           <Box
             width="100%"
@@ -171,7 +201,6 @@ const AiConsultEntryPage = () => {
                       selectedAvatar === avatar.name
                         ? "5px solid #3399FF"
                         : "none",
-                    // borderRadius: "8px",
                     transition: "all 0.3s ease",
                   }}
                   alt={`Avatar ${avatar.name}`}
@@ -207,14 +236,47 @@ const AiConsultEntryPage = () => {
           </Box>
         </Stack>
       </Box>
+
+      {/* 영상 오버레이 */}
+      {isVideoPlaying && (
+        <VideoOverlay>
+          <TransitionVideo
+            src={hallwayVideo}
+            autoPlay
+            onEnded={onVideoEnded}
+            controls={false}
+          />
+        </VideoOverlay>
+      )}
     </Container>
   );
 };
+
 const Container = styled.div`
   display: flex;
-  //background-color: yellow;
-  //padding-top: HEADER_HEIGHT;
   height: 100vh;
   flex-direction: column;
 `;
+
+// 영상 오버레이 스타일
+const VideoOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black; /* 배경색을 검정으로 설정하여 영상이 더욱 돋보이게 함 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* 다른 모든 요소보다 위에 표시 */
+`;
+
+// 영상 스타일
+const TransitionVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export default AiConsultEntryPage;
