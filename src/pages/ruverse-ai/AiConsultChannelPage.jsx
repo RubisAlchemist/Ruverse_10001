@@ -1730,7 +1730,7 @@ const AiConsultChannelPage = () => {
           src={BackgroundImage}
           alt="Background"
           position="absolute"
-          //height="100%"
+          height="100%"
           objectFit="cover"
           zIndex={0}
           sx={{
